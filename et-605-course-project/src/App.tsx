@@ -1,13 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, CheckCircle, XCircle, Lightbulb, ArrowRight, RefreshCw, GraduationCap, Activity, Terminal, Database, X } from 'lucide-react';
+import { BookOpen, CheckCircle, XCircle, Lightbulb, ArrowRight, RefreshCw, GraduationCap, Activity, Terminal, Database, X, Lock } from 'lucide-react';
 import { domainContent } from './data/content';
 import { Figure } from './components/Figure';
 
-type AppStatus = 'intro' | 'problem' | 'feedback' | 'remediation' | 'kc_complete' | 'course_complete';
+type AppStatus = 'intro' | 'problem' | 'feedback' | 'remediation' | 'kc_complete' | 'course_complete' | 'transition';
+
+const ENCOURAGING_MESSAGES = [
+  "You're on a hot streak! 🔥",
+  "Keep going, just a little bit left! 🚀",
+  "You're doing amazing, keep it up! 🌟",
+  "Math is your superpower! 🦸‍♀️",
+  "Every mistake is a stepping stone to success! 💡",
+  "You're crushing these angles! 📐",
+  "Brilliant work! Let's tackle the next one. 🧠",
+  "You're getting sharper every minute! ⚔️",
+  "Nothing can stop you now! 🚂",
+  "You're a geometry genius in the making! 🎓",
+  "Awesome effort! Ready for another? 🎯",
+  "You're unlocking new brain levels! 🔓",
+  "Fantastic focus! Keep that energy going. ⚡",
+  "You're making this look easy! 😎",
+  "One step closer to 100% mastery! 📈",
+  "Your dedication is paying off! 🏆",
+  "Geometry has nothing on you! 💪",
+  "Keep that momentum rolling! 🌊",
+  "You're building a solid foundation! 🏗️",
+  "Stellar progress! Let's keep moving. 🌠",
+  "You've got this! Believe in yourself. ✨"
+];
 
 export default function App() {
-  const [sessionId] = useState(() => {
+  const [sessionId, setSessionId] = useState(() => {
     return typeof crypto !== 'undefined' && crypto.randomUUID 
       ? crypto.randomUUID() 
       : Math.random().toString(36).substring(2, 15);
@@ -25,6 +49,10 @@ export default function App() {
     const saved = localStorage.getItem('math_tutor_problemIndex');
     return saved ? parseInt(saved, 10) : 0;
   });
+  const [currentDifficulty, setCurrentDifficulty] = useState<'easy' | 'medium' | 'hard'>(() => {
+    const saved = localStorage.getItem('math_tutor_currentDifficulty');
+    return (saved as 'easy' | 'medium' | 'hard') || 'easy';
+  });
   const [status, setStatus] = useState<AppStatus>(() => {
     const saved = localStorage.getItem('math_tutor_status');
     return (saved as AppStatus) || 'intro';
@@ -38,6 +66,18 @@ export default function App() {
   
   const [showLearnerModel, setShowLearnerModel] = useState(false);
   const [logs, setLogs] = useState<{time: string, msg: string}[]>([]);
+  const [phaseStartTime, setPhaseStartTime] = useState<number>(Date.now());
+  const [showFastReadingWarning, setShowFastReadingWarning] = useState(false);
+  
+  const [selectedOptionsHistory, setSelectedOptionsHistory] = useState<string[]>([]);
+  const [hasConfirmedGuesswork, setHasConfirmedGuesswork] = useState(false);
+  const [showGuessworkWarning, setShowGuessworkWarning] = useState(false);
+  const [transitionMsg, setTransitionMsg] = useState(ENCOURAGING_MESSAGES[0]);
+
+  const [showAccessModal, setShowAccessModal] = useState(false);
+  const [accessTarget, setAccessTarget] = useState<'reset' | 'learnerModel' | null>(null);
+  const [accessCodeInput, setAccessCodeInput] = useState('');
+  const [accessError, setAccessError] = useState(false);
 
   const addLog = (msg: string) => {
     setLogs(prev => [{time: new Date().toLocaleTimeString([], {hour12: false}), msg}, ...prev].slice(0, 50));
@@ -48,14 +88,16 @@ export default function App() {
     localStorage.setItem('math_tutor_mastery', JSON.stringify(mastery));
     localStorage.setItem('math_tutor_problemIndex', problemIndex.toString());
     localStorage.setItem('math_tutor_status', status);
-  }, [kcIndex, mastery, problemIndex, status]);
+    localStorage.setItem('math_tutor_currentDifficulty', currentDifficulty);
+  }, [kcIndex, mastery, problemIndex, status, currentDifficulty]);
 
   useEffect(() => {
     addLog(`New session started: ${sessionId}`);
   }, [sessionId]);
 
   const currentKc = domainContent[kcIndex];
-  const currentProblem = currentKc?.problems[problemIndex % currentKc.problems.length];
+  const currentProblemList = currentKc?.problems[currentDifficulty] || [];
+  const currentProblem = currentProblemList[problemIndex % Math.max(1, currentProblemList.length)];
 
   const resetProblemState = () => {
     setHintLevel(0);
@@ -63,24 +105,82 @@ export default function App() {
     setInputValue('');
     setFeedback(null);
     setShowSolution(false);
+    setSelectedOptionsHistory([]);
+    setHasConfirmedGuesswork(false);
+  };
+
+  const handleResetCourse = () => {
+    localStorage.clear();
+    setKcIndex(0);
+    setMastery({});
+    setProblemIndex(0);
+    setStatus('intro');
+    setCurrentDifficulty('easy');
+    setLogs([]);
+    setSessionId(Math.random().toString(36).substring(2, 9));
+    resetProblemState();
+    setPhaseStartTime(Date.now());
+    addLog('Course reset by developer.');
+  };
+
+  const handleAccessSubmit = () => {
+    if (accessCodeInput === '1234') {
+      setShowAccessModal(false);
+      setAccessCodeInput('');
+      setAccessError(false);
+      if (accessTarget === 'reset') {
+        handleResetCourse();
+      } else if (accessTarget === 'learnerModel') {
+        setShowLearnerModel(true);
+      }
+    } else {
+      setAccessError(true);
+    }
+  };
+
+  const handleStartPractice = (force = false) => {
+    const timeSpent = Date.now() - phaseStartTime;
+    if (!force && timeSpent < 10000) {
+      setShowFastReadingWarning(true);
+      return;
+    }
+    setShowFastReadingWarning(false);
+    setTransitionMsg("Let's practice some questions to strengthen your concept");
+    setStatus('transition');
+    addLog(`Finished reading ${currentKc.id} in ${Math.round(timeSpent / 1000)}s`);
+    
+    if ((mastery[currentKc.id] || 0) === 0) {
+      setMastery(prev => ({ ...prev, [currentKc.id]: 30 }));
+      addLog(`Initial mastery for ${currentKc.id} set to 30% after reading tutorial`);
+    }
   };
 
   const handleSubmit = () => {
     if (!inputValue) return;
     
-    const isCorrect = inputValue.trim().toLowerCase() === currentProblem.answer.toString().toLowerCase();
+    if (currentProblem.type === 'multiple-choice' && selectedOptionsHistory.length >= 3 && !hasConfirmedGuesswork) {
+      setShowGuessworkWarning(true);
+      return;
+    }
+    
+    processSubmit(false);
+  };
+
+  const processSubmit = (admittedGuess: boolean) => {
+    const timeSpent = Date.now() - phaseStartTime;
+    const isCorrect = !admittedGuess && inputValue.trim().toLowerCase() === currentProblem.answer.toString().toLowerCase();
     
     if (isCorrect) {
       setFeedback({ type: 'success', message: 'Correct! Great job.' });
       setShowSolution(true);
-      addLog(`Correct answer for ${currentProblem.id}`);
+      addLog(`Correct answer for ${currentProblem.id} in ${Math.round(timeSpent / 1000)}s`);
       
       // Update mastery
       const currentMastery = mastery[currentKc.id] || 0;
-      let points = 35;
-      if (hintLevel === 1) points = 25;
-      if (hintLevel === 2) points = 15;
-      if (hintLevel === 3) points = 10;
+      let points = currentDifficulty === 'easy' ? 20 : currentDifficulty === 'medium' ? 25 : 30;
+      if (hintLevel === 1) points -= 5;
+      if (hintLevel === 2) points -= 10;
+      if (hintLevel === 3) points -= 15;
       if (attempts > 0) points -= 10;
       
       const newMastery = Math.min(100, currentMastery + Math.max(5, points));
@@ -90,14 +190,28 @@ export default function App() {
     } else {
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
-      addLog(`Incorrect answer for ${currentProblem.id}. Attempt ${newAttempts}`);
       
-      if (newAttempts >= 3 || hintLevel === 3) {
+      if (newAttempts >= 2 || hintLevel === 3) {
+        const currentMastery = mastery[currentKc.id] || 30;
+        const newMastery = Math.max(0, currentMastery - 15);
+        setMastery(prev => ({ ...prev, [currentKc.id]: newMastery }));
+        addLog(`Mastery for ${currentKc.id} decreased: ${currentMastery}% -> ${newMastery}% due to 2 incorrect attempts`);
+        
         setStatus('remediation');
         setFeedback(null);
-        addLog(`Triggering remediation for ${currentKc.id}`);
+        addLog(`Triggering remediation for ${currentKc.id} after ${newAttempts} attempts`);
       } else {
-        setFeedback({ type: 'error', message: 'Not quite right. Try using a hint!' });
+        if (admittedGuess) {
+          setFeedback({ type: 'error', message: "It's okay to guess, but let's try to understand it! Here's a hint." });
+          setHintLevel(Math.min(3, hintLevel + 1));
+          addLog(`User admitted to guessing on ${currentProblem.id}`);
+        } else if (timeSpent < 3000) {
+          setFeedback({ type: 'error', message: "Whoa there, speedster! 🏎️ Take a deep breath and read the question carefully before answering." });
+          addLog(`Answered too fast (${Math.round(timeSpent / 1000)}s) and incorrectly for ${currentProblem.id}`);
+        } else {
+          setFeedback({ type: 'error', message: 'Not quite right. Try using a hint!' });
+          addLog(`Incorrect answer for ${currentProblem.id} in ${Math.round(timeSpent / 1000)}s. Attempt ${newAttempts}`);
+        }
       }
     }
   };
@@ -110,13 +224,22 @@ export default function App() {
 
   const handleNext = () => {
     const currentMastery = mastery[currentKc.id] || 0;
-    if (currentMastery >= 85) {
+    if (currentMastery >= 100) {
       setStatus('kc_complete');
       addLog(`Mastery threshold reached for ${currentKc.id}`);
     } else {
-      setProblemIndex(prev => prev + 1);
+      if (currentDifficulty === 'easy') {
+        setCurrentDifficulty('medium');
+        setProblemIndex(0);
+      } else if (currentDifficulty === 'medium') {
+        setCurrentDifficulty('hard');
+        setProblemIndex(0);
+      } else {
+        setProblemIndex(prev => prev + 1);
+      }
       resetProblemState();
-      setStatus('problem');
+      setTransitionMsg(ENCOURAGING_MESSAGES[Math.floor(Math.random() * ENCOURAGING_MESSAGES.length)]);
+      setStatus('transition');
       addLog(`Moving to next problem in ${currentKc.id}`);
     }
   };
@@ -125,8 +248,10 @@ export default function App() {
     if (kcIndex + 1 < domainContent.length) {
       setKcIndex(prev => prev + 1);
       setProblemIndex(0);
+      setCurrentDifficulty('easy');
       resetProblemState();
       setStatus('intro');
+      setPhaseStartTime(Date.now());
       addLog(`Advanced to new topic: ${domainContent[kcIndex + 1].id}`);
     } else {
       setStatus('course_complete');
@@ -165,11 +290,11 @@ export default function App() {
                   <span className={`text-sm font-medium ${isActive ? 'text-indigo-300' : isPast ? 'text-emerald-400' : 'text-slate-500'}`}>
                     {idx + 1}. {kc.title}
                   </span>
-                  {kcMastery >= 85 && <CheckCircle className="w-4 h-4 text-emerald-500" />}
+                  {kcMastery >= 100 && <CheckCircle className="w-4 h-4 text-emerald-500" />}
                 </div>
                 <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
                   <div 
-                    className={`h-full rounded-full transition-all duration-1000 ${kcMastery >= 85 ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                    className={`h-full rounded-full transition-all duration-1000 ${kcMastery >= 100 ? 'bg-emerald-500' : 'bg-indigo-500'}`}
                     style={{ width: `${kcMastery}%` }}
                   />
                 </div>
@@ -228,18 +353,77 @@ export default function App() {
                 
                 <div className="flex justify-center pt-8 border-t border-slate-100">
                   <button 
-                    onClick={() => {
-                      setStatus('problem');
-                      if ((mastery[currentKc.id] || 0) === 0) {
-                        setMastery(prev => ({ ...prev, [currentKc.id]: 30 }));
-                        addLog(`Initial mastery for ${currentKc.id} set to 30% after reading tutorial`);
-                      }
-                    }} 
+                    onClick={() => handleStartPractice(false)} 
                     className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-medium hover:bg-indigo-700 transition-colors inline-flex items-center gap-2 shadow-sm hover:shadow-md w-full sm:w-auto justify-center"
                   >
                     Start Practice <ArrowRight className="w-5 h-5" />
                   </button>
                 </div>
+
+                {/* Fast Reading Warning Modal */}
+                <AnimatePresence>
+                  {showFastReadingWarning && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+                    >
+                      <motion.div 
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.9, y: 20 }}
+                        className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 text-center border border-slate-200"
+                      >
+                        <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <span className="text-3xl">🏎️</span>
+                        </div>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-2">Whoa, speed reader!</h3>
+                        <p className="text-slate-600 mb-8">
+                          You barely glanced at the material. Are you sure you're ready to tackle the practice problems?
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                          <button 
+                            onClick={() => setShowFastReadingWarning(false)}
+                            className="px-6 py-3 rounded-xl font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                          >
+                            Let me read more
+                          </button>
+                          <button 
+                            onClick={() => handleStartPractice(true)}
+                            className="px-6 py-3 rounded-xl font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                          >
+                            Yes, I'm ready!
+                          </button>
+                        </div>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
+
+            {status === 'transition' && (
+              <motion.div 
+                key="transition"
+                variants={variants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center flex flex-col items-center justify-center min-h-[400px]"
+              >
+                <div className="text-6xl mb-6">✨</div>
+                <h2 className="text-3xl font-bold text-slate-900 mb-8">{transitionMsg}</h2>
+                <button 
+                  onClick={() => {
+                    setStatus('problem');
+                    setPhaseStartTime(Date.now());
+                  }}
+                  className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-medium hover:bg-indigo-700 transition-colors inline-flex items-center gap-2 shadow-sm"
+                >
+                  Let's Go! <ArrowRight className="w-5 h-5" />
+                </button>
               </motion.div>
             )}
 
@@ -275,6 +459,10 @@ export default function App() {
                           onClick={() => {
                             setInputValue(opt);
                             if (feedback?.type === 'error') setFeedback(null);
+                            if (opt !== selectedOptionsHistory[selectedOptionsHistory.length - 1]) {
+                              setSelectedOptionsHistory(prev => [...prev, opt]);
+                              addLog(`Selected option: ${opt}`);
+                            }
                           }}
                           className={`p-5 rounded-xl border-2 text-left transition-all text-lg ${
                             inputValue === opt 
@@ -293,7 +481,13 @@ export default function App() {
                         type="text" 
                         value={inputValue}
                         onChange={e => {
-                          setInputValue(e.target.value);
+                          const val = e.target.value;
+                          if (currentProblem.type === 'numeric' && !/^[0-9.-]*$/.test(val)) {
+                            setFeedback({ type: 'error', message: 'Only numeric inputs are allowed for this question.' });
+                            addLog(`Blocked non-numeric input attempt: "${val}"`);
+                            return;
+                          }
+                          setInputValue(val);
                           if (feedback?.type === 'error') setFeedback(null);
                         }}
                         placeholder="Type your answer..."
@@ -367,6 +561,7 @@ export default function App() {
                               onClick={() => {
                                 setStatus('intro');
                                 setFeedback(null);
+                                setPhaseStartTime(Date.now());
                               }}
                               className="bg-slate-100 text-slate-700 px-4 py-3 rounded-xl font-medium hover:bg-slate-200 transition-colors text-sm"
                             >
@@ -376,6 +571,8 @@ export default function App() {
                               onClick={() => {
                                 setProblemIndex(prev => prev + 1);
                                 resetProblemState();
+                                setTransitionMsg(ENCOURAGING_MESSAGES[Math.floor(Math.random() * ENCOURAGING_MESSAGES.length)]);
+                                setStatus('transition');
                               }}
                               className="bg-slate-100 text-slate-700 px-4 py-3 rounded-xl font-medium hover:bg-slate-200 transition-colors text-sm"
                             >
@@ -409,6 +606,55 @@ export default function App() {
                     )}
                   </div>
                 </div>
+
+                {/* Guesswork Warning Modal */}
+                <AnimatePresence>
+                  {showGuessworkWarning && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+                    >
+                      <motion.div 
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.9, y: 20 }}
+                        className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 text-center border border-slate-200"
+                      >
+                        <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <span className="text-3xl">🤔</span>
+                        </div>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-2">Are you guessing?</h3>
+                        <p className="text-slate-600 mb-8">
+                          We noticed you switching between options. Did you solve this or are you just guessing?
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                          <button 
+                            onClick={() => {
+                              setShowGuessworkWarning(false);
+                              setHasConfirmedGuesswork(true);
+                              processSubmit(true);
+                            }}
+                            className="px-6 py-3 rounded-xl font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                          >
+                            I was guessing
+                          </button>
+                          <button 
+                            onClick={() => {
+                              setShowGuessworkWarning(false);
+                              setHasConfirmedGuesswork(true);
+                              processSubmit(false);
+                            }}
+                            className="px-6 py-3 rounded-xl font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                          >
+                            I solved it!
+                          </button>
+                        </div>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             )}
 
@@ -433,7 +679,8 @@ export default function App() {
                   onClick={() => {
                     setProblemIndex(prev => prev + 1);
                     resetProblemState();
-                    setStatus('problem');
+                    setTransitionMsg(ENCOURAGING_MESSAGES[Math.floor(Math.random() * ENCOURAGING_MESSAGES.length)]);
+                    setStatus('transition');
                   }}
                   className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-medium hover:bg-indigo-700 transition-colors inline-flex items-center gap-2 shadow-sm"
                 >
@@ -487,6 +734,7 @@ export default function App() {
                     setMastery({});
                     setProblemIndex(0);
                     setStatus('intro');
+                    setPhaseStartTime(Date.now());
                   }}
                   className="bg-slate-100 text-slate-700 px-8 py-4 rounded-xl font-medium hover:bg-slate-200 transition-colors inline-flex items-center gap-2"
                 >
@@ -497,14 +745,88 @@ export default function App() {
           </AnimatePresence>
         </div>
       </div>
-      {/* Floating Toggle Button */}
-      <button
-        onClick={() => setShowLearnerModel(true)}
-        className="fixed bottom-6 right-6 bg-slate-900 text-white p-4 rounded-full shadow-2xl hover:bg-slate-800 transition-all z-40 flex items-center gap-2"
-      >
-        <Activity className="w-6 h-6" />
-        <span className="font-medium hidden md:inline">Learner Model</span>
-      </button>
+      {/* Floating Toggle Buttons */}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-40">
+        <button
+          onClick={() => {
+            setAccessTarget('reset');
+            setShowAccessModal(true);
+          }}
+          className="bg-rose-600 text-white p-4 rounded-full shadow-2xl hover:bg-rose-700 transition-all flex items-center justify-center gap-2"
+        >
+          <RefreshCw className="w-6 h-6" />
+          <span className="font-medium hidden md:inline">Reset Course</span>
+        </button>
+        <button
+          onClick={() => {
+            setAccessTarget('learnerModel');
+            setShowAccessModal(true);
+          }}
+          className="bg-slate-900 text-white p-4 rounded-full shadow-2xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+        >
+          <Activity className="w-6 h-6" />
+          <span className="font-medium hidden md:inline">Learner Model</span>
+        </button>
+      </div>
+
+      {/* Access Code Modal */}
+      <AnimatePresence>
+        {showAccessModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 text-center border border-slate-200"
+            >
+              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Lock className="w-8 h-8 text-slate-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Developer Access</h3>
+              <p className="text-slate-600 mb-6">
+                Please enter the access code to continue.
+              </p>
+              <input
+                type="password"
+                value={accessCodeInput}
+                onChange={(e) => setAccessCodeInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAccessSubmit()}
+                placeholder="Enter code"
+                className={`w-full p-4 rounded-xl border-2 text-center text-xl tracking-widest mb-4 focus:outline-none ${
+                  accessError ? 'border-rose-300 focus:border-rose-500 bg-rose-50' : 'border-slate-200 focus:border-indigo-500'
+                }`}
+                autoFocus
+              />
+              {accessError && (
+                <p className="text-rose-500 text-sm mb-4 font-medium">Incorrect access code.</p>
+              )}
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button 
+                  onClick={() => {
+                    setShowAccessModal(false);
+                    setAccessCodeInput('');
+                    setAccessError(false);
+                  }}
+                  className="px-6 py-3 rounded-xl font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors w-full sm:w-auto"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleAccessSubmit}
+                  className="px-6 py-3 rounded-xl font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors w-full sm:w-auto"
+                >
+                  Submit
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Learner Model Panel */}
       <AnimatePresence>
@@ -551,11 +873,11 @@ export default function App() {
                       <div key={kc.id}>
                         <div className="flex justify-between text-xs mb-1">
                           <span className="text-slate-400">{kc.id.toUpperCase()}</span>
-                          <span className={m >= 85 ? 'text-emerald-400' : 'text-slate-300'}>{m.toFixed(1)}%</span>
+                          <span className={m >= 100 ? 'text-emerald-400' : 'text-slate-300'}>{m.toFixed(1)}%</span>
                         </div>
                         <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
                           <div 
-                            className={`h-full rounded-full transition-all duration-500 ${m >= 85 ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                            className={`h-full rounded-full transition-all duration-500 ${m >= 100 ? 'bg-emerald-500' : 'bg-indigo-500'}`}
                             style={{ width: `${m}%` }}
                           />
                         </div>
