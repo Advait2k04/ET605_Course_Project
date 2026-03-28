@@ -75,7 +75,7 @@ export default function App() {
   const [transitionMsg, setTransitionMsg] = useState(ENCOURAGING_MESSAGES[0]);
 
   const [showAccessModal, setShowAccessModal] = useState(false);
-  const [accessTarget, setAccessTarget] = useState<'reset' | 'learnerModel' | null>(null);
+  const [accessTarget, setAccessTarget] = useState<'reset' | 'learnerModel' | 'navigate' | null>(null);
   const [accessCodeInput, setAccessCodeInput] = useState('');
   const [accessError, setAccessError] = useState(false);
 
@@ -132,6 +132,8 @@ export default function App() {
         handleResetCourse();
       } else if (accessTarget === 'learnerModel') {
         setShowLearnerModel(true);
+      } else if (accessTarget === 'navigate') {
+        setShowLearnerModel(true); // Open the learner model to show the navigation UI
       }
     } else {
       setAccessError(true);
@@ -169,33 +171,52 @@ export default function App() {
   const processSubmit = (admittedGuess: boolean) => {
     const timeSpent = Date.now() - phaseStartTime;
     const isCorrect = !admittedGuess && inputValue.trim().toLowerCase() === currentProblem.answer.toString().toLowerCase();
-    
+
+    // BKT Update Helper
+    const updateBKT = (evidence: 1 | 0) => {
+      const currentMasteryProb = (mastery[currentKc.id] || 30) / 100;
+      
+      // BKT Parameters
+      const P_G = currentProblem.type === 'multiple-choice' ? 0.25 : 0.05; // Guess probability
+      const P_S = 0.10; // Slip probability
+      const P_T = 0.15; // Transit probability
+
+      let pL_given_E;
+      if (evidence === 1) {
+        // P(L | E=1) = [P(L) * (1 - P(S))] / [P(L) * (1 - P(S)) + (1 - P(L)) * P(G)]
+        const numerator = currentMasteryProb * (1 - P_S);
+        const denominator = numerator + (1 - currentMasteryProb) * P_G;
+        pL_given_E = numerator / denominator;
+      } else {
+        // P(L | E=0) = [P(L) * P(S)] / [P(L) * P(S) + (1 - P(L)) * (1 - P(G))]
+        const numerator = currentMasteryProb * P_S;
+        const denominator = numerator + (1 - currentMasteryProb) * (1 - P_G);
+        pL_given_E = numerator / denominator;
+      }
+
+      // Apply Transit: P(L_next) = P(L|E) + (1 - P(L|E)) * P(T)
+      const newMasteryProb = pL_given_E + (1 - pL_given_E) * P_T;
+      const newMasteryPercentage = Math.round(newMasteryProb * 100);
+
+      setMastery(prev => ({ ...prev, [currentKc.id]: newMasteryPercentage }));
+      addLog(`BKT Mastery for ${currentKc.id} updated: ${Math.round(currentMasteryProb*100)}% -> ${newMasteryPercentage}% (Evidence: ${evidence})`);
+    };
+
     if (isCorrect) {
       setFeedback({ type: 'success', message: 'Correct! Great job.' });
       setShowSolution(true);
       addLog(`Correct answer for ${currentProblem.id} in ${Math.round(timeSpent / 1000)}s`);
       
-      // Update mastery
-      const currentMastery = mastery[currentKc.id] || 0;
-      let points = currentDifficulty === 'easy' ? 20 : currentDifficulty === 'medium' ? 25 : 30;
-      if (hintLevel === 1) points -= 5;
-      if (hintLevel === 2) points -= 10;
-      if (hintLevel === 3) points -= 15;
-      if (attempts > 0) points -= 10;
-      
-      const newMastery = Math.min(100, currentMastery + Math.max(5, points));
-      setMastery({ ...mastery, [currentKc.id]: newMastery });
-      addLog(`Mastery for ${currentKc.id} updated: ${currentMastery}% -> ${newMastery}%`);
+      // Evidence is 1 ONLY if no hints and first attempt.
+      const evidence = (attempts === 0 && hintLevel === 0 && !admittedGuess) ? 1 : 0;
+      updateBKT(evidence);
       
     } else {
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
       
       if (newAttempts >= 2 || hintLevel === 3) {
-        const currentMastery = mastery[currentKc.id] || 30;
-        const newMastery = Math.max(0, currentMastery - 15);
-        setMastery(prev => ({ ...prev, [currentKc.id]: newMastery }));
-        addLog(`Mastery for ${currentKc.id} decreased: ${currentMastery}% -> ${newMastery}% due to 2 incorrect attempts`);
+        updateBKT(0); // Evidence is 0 because they failed to solve it independently
         
         setStatus('remediation');
         setFeedback(null);
@@ -224,19 +245,28 @@ export default function App() {
 
   const handleNext = () => {
     const currentMastery = mastery[currentKc.id] || 0;
-    if (currentMastery >= 100) {
+    
+    // BKT threshold is typically 0.95 (95%)
+    if (currentMastery >= 95) {
       setStatus('kc_complete');
       addLog(`Mastery threshold reached for ${currentKc.id}`);
     } else {
-      if (currentDifficulty === 'easy') {
-        setCurrentDifficulty('medium');
+      // Adaptive difficulty based on BKT mastery probability
+      let nextDifficulty: 'easy' | 'medium' | 'hard' = 'easy';
+      if (currentMastery >= 80) {
+        nextDifficulty = 'hard';
+      } else if (currentMastery >= 50) {
+        nextDifficulty = 'medium';
+      }
+
+      if (nextDifficulty !== currentDifficulty) {
+        setCurrentDifficulty(nextDifficulty);
         setProblemIndex(0);
-      } else if (currentDifficulty === 'medium') {
-        setCurrentDifficulty('hard');
-        setProblemIndex(0);
+        addLog(`Difficulty adapted to ${nextDifficulty} based on mastery ${currentMastery}%`);
       } else {
         setProblemIndex(prev => prev + 1);
       }
+      
       resetProblemState();
       setTransitionMsg(ENCOURAGING_MESSAGES[Math.floor(Math.random() * ENCOURAGING_MESSAGES.length)]);
       setStatus('transition');
@@ -342,9 +372,9 @@ export default function App() {
                       <div className="text-slate-600 leading-relaxed whitespace-pre-wrap">
                         {section.text}
                       </div>
-                      {section.figure && (
+                      {section.image && (
                         <div className="bg-slate-50 rounded-xl border border-slate-100 p-6 my-6">
-                          <Figure type={section.figure} />
+                          <Figure src={section.image} />
                         </div>
                       )}
                     </div>
@@ -749,6 +779,16 @@ export default function App() {
       <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-40">
         <button
           onClick={() => {
+            setAccessTarget('navigate');
+            setShowAccessModal(true);
+          }}
+          className="bg-indigo-600 text-white p-4 rounded-full shadow-2xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+        >
+          <BookOpen className="w-6 h-6" />
+          <span className="font-medium hidden md:inline">Dev Navigation</span>
+        </button>
+        <button
+          onClick={() => {
             setAccessTarget('reset');
             setShowAccessModal(true);
           }}
@@ -860,6 +900,34 @@ export default function App() {
                   <div className="flex justify-between"><span className="text-slate-400">Difficulty:</span> <span className="text-indigo-400 font-mono">{currentProblem?.difficulty || 'none'}</span></div>
                   <div className="flex justify-between"><span className="text-slate-400">Attempts:</span> <span className="text-indigo-400 font-mono">{attempts}/3</span></div>
                   <div className="flex justify-between"><span className="text-slate-400">Hints Used:</span> <span className="text-indigo-400 font-mono">{hintLevel}/3</span></div>
+                </div>
+              </div>
+
+              {/* Developer Navigation */}
+              <div>
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Jump to Subtopic</h3>
+                <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
+                  {domainContent.map((kc, index) => (
+                    <button
+                      key={kc.id}
+                      onClick={() => {
+                        setKcIndex(index);
+                        setProblemIndex(0);
+                        setCurrentDifficulty('easy');
+                        setStatus('intro');
+                        resetProblemState();
+                        setPhaseStartTime(Date.now());
+                        addLog(`Developer jumped to ${kc.id}`);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                        kcIndex === index 
+                          ? 'bg-indigo-600 text-white font-medium' 
+                          : 'text-slate-300 hover:bg-slate-700'
+                      }`}
+                    >
+                      {kc.id.toUpperCase()}: {kc.title}
+                    </button>
+                  ))}
                 </div>
               </div>
 

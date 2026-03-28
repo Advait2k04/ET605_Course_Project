@@ -3,7 +3,7 @@ export type Difficulty = 'easy' | 'medium' | 'hard';
 export interface TutorialSection {
   title?: string;
   text: string;
-  figure?: 'types-of-angles' | 'complementary' | 'supplementary' | 'adjacent' | 'linear-pair' | 'vertically-opposite' | 'transversal' | 'corresponding-angles' | 'alternate-interior' | 'co-interior' | 'parallel-lines';
+  image?: string; // e.g., '/images/types-of-angles.png'
 }
 
 export interface Problem {
@@ -38,16 +38,16 @@ export const domainContent: KC[] = [
     tutorial: [
       {
         title: "What is an Angle?",
-        text: "An angle is formed when two rays originate from the same point called the vertex.",
-        figure: 'types-of-angles'
+        text: "Imagine you're standing in the middle of a room, pointing straight ahead. Now, without moving your feet, turn your body to point at the door. The amount you turned is an angle! In geometry, an angle is formed when two straight lines (called rays) meet at a single point (called the vertex).",
+        image: '/images/types-of-angles.png'
       },
       {
         title: "Story: Learning from a Clock",
-        text: "Riya and Arjun observed that clock hands form different angles at different times, helping them understand angle types."
+        text: "Riya and Arjun were waiting for the school bus. Arjun looked at his watch. 'It's exactly 3:00 PM,' he said. Riya noticed the hands on the watch. 'Look!' she pointed. 'The minute hand is pointing straight up at the 12, and the hour hand is pointing exactly at the 3. They make a perfect L-shape. That's a right angle!' Arjun smiled, 'And at 6:00, they'll make a straight line. Geometry is everywhere!'"
       },
       {
         title: "Classification",
-        text: "Acute (<90°), Right (=90°), Obtuse (90°–180°), Straight (=180°), Reflex (>180°)."
+        text: "Angles come in different sizes, just like slices of pizza! \n• Acute: A small slice, less than 90°.\n• Right: A perfect quarter-pizza, exactly 90° (looks like an 'L').\n• Obtuse: A big slice, more than 90° but less than 180°.\n• Straight: Half a pizza, exactly 180° (a flat line).\n• Reflex: More than half a pizza, greater than 180°."
       }
     ],
     remediation: "Think of a door: slightly open → acute, L-shape → right, wide open → obtuse, fully flat → straight, beyond → reflex.",
@@ -177,13 +177,13 @@ export const domainContent: KC[] = [
     tutorial: [
       {
         title: "Complementary Angles",
-        text: "Two angles whose sum is 90° are called complementary.",
-        figure: 'complementary'
+        text: "Meet the 'Complementary Twins'. Whenever they work together, they always give exactly 90% effort. If one twin gives 40%, the other must give 50%. In geometry, two angles are complementary if they add up to exactly 90° (a right angle).",
+        image: '/images/complementary.png'
       },
       {
         title: "Supplementary Angles",
-        text: "Two angles whose sum is 180° are called supplementary.",
-        figure: 'supplementary'
+        text: "Now meet the 'Supplementary Superheroes'. Their combined power level is always exactly 180. If one hero has a power level of 120, the other must have 60. Two angles are supplementary if they add up to exactly 180° (a straight line).",
+        image: '/images/supplementary.png'
       }
     ],
     remediation: "Think: Complement → 90° (corner), Supplement → 180° (straight line).",
@@ -268,8 +268,8 @@ export const domainContent: KC[] = [
     tutorial: [
       {
         title: "Definition",
-        text: "Adjacent angles share a common vertex and one side.",
-        figure: 'adjacent'
+        text: "Think of two houses that share a common wall. They are right next to each other. In geometry, Adjacent Angles are like those houses. They share a common vertex (the corner) and a common arm (the wall), but they don't overlap inside.",
+        image: '/images/adjacent.png'
       }
     ],
     remediation: "Think of adjacent angles as neighbours sharing a wall.",
@@ -329,8 +329,8 @@ export const domainContent: KC[] = [
     tutorial: [
       {
         title: "Linear Pair Axiom",
-        text: "Angles on a straight line sum to 180°.",
-        figure: 'linear-pair'
+        text: "Imagine a straight road. If you draw a line branching off that road, you create two angles. Because the road is perfectly straight (180°), those two adjacent angles MUST add up to 180°. This special duo is called a Linear Pair.",
+        image: '/images/linear-pair.png'
       }
     ],
     remediation: "Think of a straight line → 180° total.",
@@ -389,8 +389,8 @@ export const domainContent: KC[] = [
     tutorial: [
       {
         title: "Key Rule",
-        text: "Opposite angles in intersection are equal.",
-        figure: 'vertically-opposite'
+        text: "Picture a pair of open scissors. The angle between the blades on top is exactly the same as the angle between the handles on the bottom. When two straight lines cross like an 'X', the angles opposite each other are called Vertically Opposite Angles, and they are always equal!",
+        image: '/images/vertically-opposite.png'
       }
     ],
     remediation: "Think X-shape → opposite angles equal.",
@@ -449,13 +449,13 @@ export const domainContent: KC[] = [
     tutorial: [
       {
         title: "What is a Transversal?",
-        text: "A line that intersects two or more lines at distinct points is called a transversal.",
-        figure: 'transversal'
+        text: "Imagine a busy highway with multiple lanes (parallel lines). Now, imagine a train track cutting straight across all those lanes. That train track is a 'Transversal'—a line that intersects two or more other lines.",
+        image: '/images/transversal.png'
       },
       {
         title: "Corresponding Angles",
-        text: "Corresponding angles are in the same relative position at each intersection where the straight line crosses the parallel lines. If the two lines are parallel, then the corresponding angles are equal.",
-        figure: 'corresponding-angles'
+        text: "Think of a multi-story parking garage. If you park in the front-right spot on the 1st floor, and your friend parks in the front-right spot on the 2nd floor, you are in 'Corresponding' positions. If the floors are perfectly parallel, your spots are identical. Similarly, Corresponding Angles are in the exact same relative position at each intersection. If the lines are parallel, these angles are equal.",
+        image: '/images/corresponding-angles.png'
       }
     ],
     remediation: "Imagine a ladder over two parallel train tracks. The angles at the same \"corner\" of each track are Corresponding and equal.",
@@ -515,13 +515,13 @@ export const domainContent: KC[] = [
     tutorial: [
       {
         title: "Alternate Interior Angles",
-        text: "Alternate interior angles are a pair of angles on opposite sides of the transversal and between the two lines. If the lines are parallel, these angles are equal. Look for a \"Z\" shape.",
-        figure: 'alternate-interior'
+        text: "Look for the letter 'Z' hidden in the lines! Alternate interior angles are on opposite sides of the transversal track, trapped *inside* the two parallel lines. Just like the inner corners of a 'Z', if the top and bottom lines are parallel, these angles are exactly equal.",
+        image: '/images/alternate-interior.png'
       },
       {
         title: "Co-interior Angles",
-        text: "Co-interior angles are on the same side of the transversal and between the two lines. If the lines are parallel, they add up to 180° (they are supplementary). Look for a \"C\" shape.",
-        figure: 'co-interior'
+        text: "Now look for the letter 'C'. Co-interior angles are on the *same* side of the transversal, trapped inside the parallel lines. Unlike the 'Z' angles, these aren't equal. Instead, they are teammates that always add up to 180° (supplementary).",
+        image: '/images/co-interior.png'
       }
     ],
     remediation: "Look for the letter \"Z\" for Alternate Interior (they are equal). Look for the letter \"C\" for Co-interior (they add to 180°).",
@@ -580,8 +580,8 @@ export const domainContent: KC[] = [
     tutorial: [
       {
         title: "Parallel Transitivity",
-        text: "If line A is parallel to line B, and line B is parallel to line C, then line A must also be parallel to line C. This is a fundamental property of parallel lines.",
-        figure: 'parallel-lines'
+        text: "Imagine three train tracks. If Track A runs perfectly parallel to Track B, and Track B runs perfectly parallel to Track C, what can we say about A and C? They must also be parallel! This is called transitivity: if two lines are parallel to the same third line, they are parallel to each other.",
+        image: '/images/parallel-lines.png'
       }
     ],
     remediation: "If Train Track A runs parallel to Track B, and Track B runs parallel to Track C, then Track A and C will never cross. They are parallel.",
