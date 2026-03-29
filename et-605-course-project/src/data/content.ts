@@ -143,9 +143,9 @@ export const domainContent: KC[] = [
       hard: [
         {
           id: "kc1-h1",
-          text: "Two angles are in the ratio 2:3 and sum to 180°. Find them.",
+          text: "Two angles are in the ratio 2:3 and sum to 180°. Find the smaller angle.",
           type: "numeric",
-          answer: "72,108",
+          answer: "72",
           difficulty: "hard",
           hints: [
             "Let angles be 2x and 3x.",
@@ -156,14 +156,14 @@ export const domainContent: KC[] = [
         },
         {
           id: "kc1-h2",
-          text: "Find x if (2x + 10) is an obtuse angle between 90° and 180°.",
+          text: "Find the smallest (integer) x if (2x + 11) is an obtuse angle between 90° and 180°.",
           type: "numeric",
           answer: "40",
           difficulty: "hard",
           hints: [
-            "Set inequality: 90 < 2x + 10 < 180.",
+            "Set inequality: 90 < 2x + 11 < 180.",
             "Solve both sides.",
-            "Find valid x."
+            "Find smallest valid x."
           ],
           solution: "2x + 10 > 90 → x > 40; choose valid integer boundary."
         }
