@@ -15,7 +15,7 @@ export function Figure({ src }: FigureProps) {
     <div className="flex justify-center my-6">
       <img 
         src={src} 
-        alt={`Illustration for ${filename.replace('.png', '').replace(/-/g, ' ')}`} 
+        alt={`Illustration for ${filename.replace('.jpeg', '').replace(/-/g, ' ')}`} 
         className="max-w-full h-auto rounded-lg shadow-sm border border-slate-200"
         onError={(e) => {
           // This fallback shows a placeholder if you haven't added the image file yet.
