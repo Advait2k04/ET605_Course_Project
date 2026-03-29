@@ -219,14 +219,27 @@ export const domainContent: KC[] = [
       medium: [
         {
           id: "kc2-m1",
-          text: "Two supplementary angles are in ratio 1:2. Find them.",
+          text: "Two supplementary angles are in ratio 1:2. Find the smaller angle.",
           type: "numeric",
-          answer: "60,120",
+          answer: "60",
           difficulty: "medium",
           hints: [
             "Let angles be x and 2x.",
             "x + 2x = 180.",
-            "x = 60."
+            "Find the value of x."
+          ],
+          solution: "Angles are 60° and 120°."
+        },
+        {
+          id: "kc2-m1",
+          text: "Two supplementary angles are in ratio 1:2. Find the ;arger angle.",
+          type: "numeric",
+          answer: "120",
+          difficulty: "medium",
+          hints: [
+            "Let angles be x and 2x.",
+            "x + 2x = 180.",
+            "Find the value of 2x."
           ],
           solution: "Angles are 60° and 120°."
         },
@@ -247,16 +260,29 @@ export const domainContent: KC[] = [
       hard: [
         {
           id: "kc2-h1",
-          text: "An angle is 20° less than its complement. Find it.",
+          text: "An angle is 20° less than its complement. Find the smaller angle.",
           type: "numeric",
           answer: "35",
           difficulty: "hard",
           hints: [
             "Let angle = x.",
-            "x = (90 - x) - 20.",
+            "x + (x - 20) = 90.",
             "Solve."
           ],
           solution: "x = 35°."
+        },
+        {
+          id: "kc2-h2",
+          text: "An angle is 20° more than its complement. Find the larger angle.",
+          type: "numeric",
+          answer: "35",
+          difficulty: "hard",
+          hints: [
+            "Let angle = x.",
+            "x + (x + 20) = 90.",
+            "Solve."
+          ],
+          solution: "x = 55°."
         }
       ]
     }
@@ -353,12 +379,12 @@ export const domainContent: KC[] = [
       medium: [
         {
           id: "kc4-m1",
-          text: "One angle is 40° more than the other. Find both.",
+          text: "One angle is 40° more than the other. Both these angles constitute a linear pair. Find the smaller angle.",
           type: "numeric",
-          answer: "70,110",
+          answer: "70",
           difficulty: "medium",
           hints: [
-            "Let x, x+40.",
+            "Let x, x + 40.",
             "Sum 180.",
             "Solve."
           ],
@@ -428,16 +454,29 @@ export const domainContent: KC[] = [
       hard: [
         {
           id: "kc5-h1",
-          text: "Sum of opposite angles is 130°. Find all.",
+          text: "Sum of opposite angles is 130°. Find the measure of the smaller contained angle.",
           type: "numeric",
-          answer: "65,115,65,115",
+          answer: "65",
           difficulty: "hard",
           hints: [
             "Split equally.",
             "x + x = 130.",
             "x = 65."
           ],
-          solution: "65° and 115°."
+          solution: "65° and 115° are the adjacent angles."
+        },
+        {
+          id: "kc5-h1",
+          text: "Sum of opposite angles is 130°. Find the measure of the larger contained angle.",
+          type: "numeric",
+          answer: "115",
+          difficulty: "hard",
+          hints: [
+            "Split equally.",
+            "x + x = 360 - 130.",
+            "x = 115."
+          ],
+          solution: "65° and 115° are the adjacent angles."
         }
       ]
     }
