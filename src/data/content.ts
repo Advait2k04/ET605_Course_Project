@@ -3,7 +3,7 @@ export type Difficulty = 'easy' | 'medium' | 'hard';
 export interface TutorialSection {
   title?: string;
   text: string;
-  image?: string; // e.g., '/images/types-of-angles.png'
+  image?: string; // e.g., '/images/types-of-angles.jpeg'
 }
 
 export interface Problem {
@@ -39,7 +39,7 @@ export const domainContent: KC[] = [
       {
         title: "What is an Angle?",
         text: "Imagine you're standing in the middle of a room, pointing straight ahead. Now, without moving your feet, turn your body to point at the door. The amount you turned is an angle! In geometry, an angle is formed when two straight lines (called rays) meet at a single point (called the vertex).",
-        image: '/images/types-of-angles.png'
+        image: '/images/types-of-angles.jpeg'
       },
       {
         title: "Story: Learning from a Clock",
@@ -219,12 +219,12 @@ export const domainContent: KC[] = [
       {
         title: "Complementary Angles",
         text: "Meet the 'Complementary Twins'. Whenever they work together, they always give exactly 90% effort. If one twin gives 40%, the other must give 50%. In geometry, two angles are complementary if they add up to exactly 90° (a right angle).",
-        image: '/images/complementary.png'
+        image: '/images/complementary.jpeg'
       },
       {
         title: "Supplementary Angles",
         text: "Now meet the 'Supplementary Superheroes'. Their combined power level is always exactly 180. If one hero has a power level of 120, the other must have 60. Two angles are supplementary if they add up to exactly 180° (a straight line).",
-        image: '/images/supplementary.png'
+        image: '/images/supplementary.jpeg'
       }
     ],
     remediation: "Think: Complement → 90° (corner), Supplement → 180° (straight line).",
@@ -349,7 +349,7 @@ export const domainContent: KC[] = [
       {
         title: "Definition",
         text: "Think of two houses that share a common wall. They are right next to each other. In geometry, Adjacent Angles are like those houses. They share a common vertex (the corner) and a common arm (the wall), but they don't overlap inside.",
-        image: '/images/adjacent.png'
+        image: '/images/adjacent.jpeg'
       }
     ],
     remediation: "Think of adjacent angles as neighbours sharing a wall.",
@@ -450,7 +450,7 @@ export const domainContent: KC[] = [
       {
         title: "Linear Pair Axiom",
         text: "Imagine a straight road. If you draw a line branching off that road, you create two angles. Because the road is perfectly straight (180°), those two adjacent angles MUST add up to 180°. This special duo is called a Linear Pair.",
-        image: '/images/linear-pair.png'
+        image: '/images/linear-pair.jpeg'
       }
     ],
     remediation: "Think of a straight line → 180° total.",
@@ -550,7 +550,7 @@ export const domainContent: KC[] = [
       {
         title: "Key Rule",
         text: "Picture a pair of open scissors. The angle between the blades on top is exactly the same as the angle between the handles on the bottom. When two straight lines cross like an 'X', the angles opposite each other are called Vertically Opposite Angles, and they are always equal!",
-        image: '/images/vertically-opposite.png'
+        image: '/images/vertically-opposite.jpeg'
       }
     ],
     remediation: "Think X-shape → opposite angles equal.",
@@ -650,12 +650,12 @@ export const domainContent: KC[] = [
       {
         title: "What is a Transversal?",
         text: "Imagine a busy highway with multiple lanes (parallel lines). Now, imagine a train track cutting straight across all those lanes. That train track is a 'Transversal'—a line that intersects two or more other lines.",
-        image: '/images/transversal.png'
+        image: '/images/transversal.jpeg'
       },
       {
         title: "Corresponding Angles",
         text: "Think of a multi-story parking garage. If you park in the front-right spot on the 1st floor, and your friend parks in the front-right spot on the 2nd floor, you are in 'Corresponding' positions. If the floors are perfectly parallel, your spots are identical. Similarly, Corresponding Angles are in the exact same relative position at each intersection. If the lines are parallel, these angles are equal.",
-        image: '/images/corresponding-angles.png'
+        image: '/images/corresponding-angles.jpeg'
       }
     ],
     remediation: "Imagine a ladder over two parallel train tracks. The angles at the same \"corner\" of each track are Corresponding and equal.",
@@ -756,12 +756,12 @@ export const domainContent: KC[] = [
       {
         title: "Alternate Interior Angles",
         text: "Look for the letter 'Z' hidden in the lines! Alternate interior angles are on opposite sides of the transversal track, trapped *inside* the two parallel lines. Just like the inner corners of a 'Z', if the top and bottom lines are parallel, these angles are exactly equal.",
-        image: '/images/alternate-interior.png'
+        image: '/images/alternate-interior.jpeg'
       },
       {
         title: "Co-interior Angles",
         text: "Now look for the letter 'C'. Co-interior angles are on the *same* side of the transversal, trapped inside the parallel lines. Unlike the 'Z' angles, these aren't equal. Instead, they are teammates that always add up to 180° (supplementary).",
-        image: '/images/co-interior.png'
+        image: '/images/co-interior.jpeg'
       }
     ],
     remediation: "Look for the letter \"Z\" for Alternate Interior (they are equal). Look for the letter \"C\" for Co-interior (they add to 180°).",
@@ -861,7 +861,7 @@ export const domainContent: KC[] = [
       {
         title: "Parallel Transitivity",
         text: "Imagine three train tracks. If Track A runs perfectly parallel to Track B, and Track B runs perfectly parallel to Track C, what can we say about A and C? They must also be parallel! This is called transitivity: if two lines are parallel to the same third line, they are parallel to each other.",
-        image: '/images/parallel-lines.png'
+        image: '/images/parallel-lines.jpeg'
       }
     ],
     remediation: "If Train Track A runs parallel to Track B, and Track B runs parallel to Track C, then Track A and C will never cross. They are parallel.",
